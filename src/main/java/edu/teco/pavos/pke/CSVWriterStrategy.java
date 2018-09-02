@@ -118,12 +118,12 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 				if (this.obsProps.contains(o)) {
 					
 					//TODO get real cluster ID from record
-					String cluster = (String) obs.get("ClusterID");
+					String foi = (String) obs.get("FeatureOfInterest");
+					JSONObject featureOfInterest = (JSONObject) this.jsonParser.parse(foi);
+					String cluster = (String) featureOfInterest.get("description");
 					
 					if (this.isOneOfOrContainedInExportClusters(cluster)) {
 						
-						String foi = (String) obs.get("FeatureOfInterest");
-						JSONObject featureOfInterest = (JSONObject) this.jsonParser.parse(foi);
 						JSONObject thing = (JSONObject) this.jsonParser.parse((String) dataStream.get("Thing"));
 						JSONObject sensor = (JSONObject) this.jsonParser.parse((String) dataStream.get("Sensor"));
 						
