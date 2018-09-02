@@ -41,7 +41,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
     	
     	this.jsonParser = new JSONParser();
     	this.interval = props.getTimeFrame();
-		this.timeParser = ISODateTimeFormat.dateTimeNoMillis();
+		this.timeParser = ISODateTimeFormat.dateTime();
 		this.obsProps = props.getObservedProperties();
 		this.clusters = props.getClusters();
 		for (String s : this.clusters) {
@@ -154,7 +154,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 				
 			} else {
 				
-				return false;
+				return !this.interval.isAfter(time);
 				
 			}
 			
@@ -245,7 +245,13 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		String line = "thingϢ" + t.get("iotId") + "Ϣ";
 		line += t.get("name") + "Ϣ";
 		line += t.get("description") + "Ϣ";
-		line += ((JSONObject) t.get("properties")).toJSONString();
+		
+		String opt = "";
+		Object optional = t.get("properties");
+		if (optional != null) {
+			opt = ((JSONObject) optional).toJSONString();
+		}
+		line += opt;
 		
 		return line;
 		
@@ -290,7 +296,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 	
 	private String getObservationLine(JSONObject o, JSONObject d, JSONObject f) {
 		
-		String line = "observationϢ" + o.get("@iotId") + "Ϣ";
+		String line = "observationϢ" + o.get("iotId") + "Ϣ";
 		line += o.get("phenomenonTime") + "Ϣ";
 		line += o.get("result") + "Ϣ";
 		line += o.get("resultTime") + "Ϣ";

@@ -67,4 +67,15 @@ public class TimeIntervall {
 		
 	}
 
+	/**
+	 * Checks if the given time is after the interval
+	 * @param time to check
+	 * @return true if is after
+	 */
+	public boolean isAfter(DateTime time) {
+
+		return time.isAfter(this.end);
+		
+	}
+
 }
