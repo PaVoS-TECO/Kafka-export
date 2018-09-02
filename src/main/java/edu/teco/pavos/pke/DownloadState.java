@@ -37,7 +37,7 @@ public class DownloadState {
     	} else {
     		
     		this.ready = "noID";
-    		this.filePath = new File("/usr/pke/ext.txt");
+    		this.filePath = new File("/usr/pke/export.properties");
     		
     	}
     	

@@ -29,6 +29,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 	private Set<String> obsProps;
 	private JSONParser jsonParser;
 	private Set<String> clusters;
+	private int clusterDepth;
 	private PrintWriter writer;
 	private TimeIntervall interval;
 
@@ -43,6 +44,13 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		this.timeParser = ISODateTimeFormat.dateTimeNoMillis();
 		this.obsProps = props.getObservedProperties();
 		this.clusters = props.getClusters();
+		for (String s : this.clusters) {
+			String[] parts = s.split(":");
+			String id = parts[1];
+			String[] parts2 = id.split("-");
+			this.clusterDepth = parts2.length;
+			break;
+		}
 		
     }
     
@@ -72,7 +80,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 					
 				}
 				
-				if ((100 * out / amount) > 80)
+				if ((100 * out / amount) > 90)
 					work = false;
 				
 			}
@@ -94,26 +102,28 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		
 	}
 	
-	private boolean processRecord(JSONObject record) {
+	private boolean processRecord(JSONObject obs) {
 		
 		try {
 			
-			JSONObject observation = (JSONObject) this.jsonParser.parse((String) record.get("Observation"));
-			DateTime time = this.timeParser.parseDateTime("" + observation.get("phenomenonTime"));
+			DateTime time = this.timeParser.parseDateTime("" + obs.get("phenomenonTime"));
 			
 			if (this.interval.isInside(time)) {
 
-				JSONObject dataStream = (JSONObject) this.jsonParser.parse((String) observation.get("Datastream"));
-				JSONObject observedProperty = (JSONObject) this.jsonParser.parse((String) dataStream.get("ObservedProperty"));
+				JSONObject dataStream = (JSONObject) this.jsonParser.parse((String) obs.get("Datastream"));
+				String dts = (String) dataStream.get("ObservedProperty");
+				JSONObject observedProperty = (JSONObject) this.jsonParser.parse(dts);
 				String o = "" + observedProperty.get("name");
 				
 				if (this.obsProps.contains(o)) {
 					
-					JSONObject featureOfInterest = (JSONObject) this.jsonParser.parse((String) observation.get("FeatureOfInterest"));
-					JSONObject loc = (JSONObject) featureOfInterest.get("feature");
+					//TODO get real cluster ID from record
+					String cluster = (String) obs.get("ClusterID");
 					
-					if (this.isContainedInClusters(loc)) {
-
+					if (this.isOneOfOrContainedInExportClusters(cluster)) {
+						
+						String foi = (String) obs.get("FeatureOfInterest");
+						JSONObject featureOfInterest = (JSONObject) this.jsonParser.parse(foi);
 						JSONObject thing = (JSONObject) this.jsonParser.parse((String) dataStream.get("Thing"));
 						JSONObject sensor = (JSONObject) this.jsonParser.parse((String) dataStream.get("Sensor"));
 						
@@ -121,22 +131,22 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 						// will lead to problem with unnamed locations (iot.id-wise)
 						//JSONObject location = (JSONObject) record.get("Location");
 						
-						if (!this.observedProperties.contains(observedProperty.get("iotId").toString()))
+						if (!this.observedProperties.contains((String) observedProperty.get("iotId")))
 							this.writer.println(this.getObservedPropertyLine(observedProperty));
 						
-						if (!this.sensors.contains(sensor.get("iotId").toString()))
+						if (!this.sensors.contains((String) sensor.get("iotId")))
 							this.writer.println(this.getSensorLine(sensor));
 						
-						if (!this.things.contains(thing.get("iotId").toString()))
+						if (!this.things.contains((String) thing.get("iotId")))
 							this.writer.println(this.getThingLine(thing));
 						
-						if (!this.features.contains(featureOfInterest.get("iotId").toString()))
+						if (!this.features.contains((String) featureOfInterest.get("iotId")))
 							this.writer.println(this.getFeatureLine(featureOfInterest));
 						
-						if (!this.dataStreams.contains(dataStream.get("iotId").toString()))
+						if (!this.dataStreams.contains((String) dataStream.get("iotId")))
 							this.writer.println(this.getDataStreamLine(dataStream, thing, observedProperty, sensor));
 						
-						this.writer.println(this.getObservationLine(observation, dataStream, featureOfInterest));
+						this.writer.println(this.getObservationLine(obs, dataStream, featureOfInterest));
 						
 					}
 					
@@ -160,11 +170,16 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		
 	}
 	
-	private boolean isContainedInClusters(JSONObject location) {
+	private boolean isOneOfOrContainedInExportClusters(String clusterID) {
 		
-		// TODO
-		// uses this.clusters to check
-		return true;
+		String[] parts = clusterID.split(":");
+		String id = parts[1];
+		String[] parts2 = id.split("-");
+		String dID = parts[0] + ":" + parts2[0];
+		for (int i = 1; i < this.clusterDepth; i++) {
+			dID += "-" + parts2[i];
+		}
+		return this.clusters.contains(dID);
 		
 	}
 	
@@ -230,7 +245,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		String line = "thingϢ" + t.get("iotId") + "Ϣ";
 		line += t.get("name") + "Ϣ";
 		line += t.get("description") + "Ϣ";
-		line += ((JSONObject) t.get("properties")).toJSONString() + "Ϣ";
+		line += ((JSONObject) t.get("properties")).toJSONString();
 		
 		return line;
 		

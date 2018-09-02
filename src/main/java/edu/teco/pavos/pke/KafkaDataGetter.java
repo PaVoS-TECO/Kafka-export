@@ -64,13 +64,14 @@ public class KafkaDataGetter {
 	public boolean doMoreDataExist() {
 		
 		this.jsons = new HashSet<JSONObject>();
-		final ConsumerRecords<String, String> obs = consumer.poll(100);
+		final ConsumerRecords<String, String> obs = consumer.poll(25000);
         
         obs.forEach(record -> {
         	
 			try {
 				
 				JSONParser jsonParser = new JSONParser();
+				///json = obs
 				JSONObject json = (JSONObject) jsonParser.parse(record.value());
                 this.jsons.add(json);
                 
