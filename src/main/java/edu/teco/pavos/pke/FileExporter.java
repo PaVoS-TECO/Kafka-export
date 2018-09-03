@@ -31,13 +31,12 @@ public class FileExporter {
     public void createFile() {
     	
     	String extension = this.properties.getFileExtension();
-    	FileType fileType = new FileType(this.properties);
     	
     	try {
     		
-			FileWriterStrategy fileWriter = fileType.getFileWriter();
+			FileWriterStrategy fileWriter = FileTypesUtility.getFileWriterForFileExtension(this.properties);
 			String filename = this.ads.getID() + "." + extension;
-			String dirPath = System.getProperty("user.home") + File.separator + "exports";
+			String dirPath = "/usr/pke/exports";
 	    	String path = dirPath + File.separator + filename;
 	    	
 	    	File directory = new File(dirPath);

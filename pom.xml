@@ -67,7 +67,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>edu.tedo.pavos.pke.App</mainClass>
+							<mainClass>edu.teco.pavos.pke.App</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

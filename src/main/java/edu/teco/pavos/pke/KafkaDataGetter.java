@@ -51,7 +51,7 @@ public class KafkaDataGetter {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         this.consumer = new KafkaConsumer<>(props);
-        this.consumer.subscribe(Arrays.asList("ObservationExport"));
+        this.consumer.subscribe(Arrays.asList("AvroExport"));
         
         this.jsons = new HashSet<JSONObject>();
 		
@@ -64,7 +64,7 @@ public class KafkaDataGetter {
 	public boolean doMoreDataExist() {
 		
 		this.jsons = new HashSet<JSONObject>();
-		final ConsumerRecords<String, String> obs = consumer.poll(50000);
+		final ConsumerRecords<String, String> obs = consumer.poll(40000);
         
         obs.forEach(record -> {
         	
