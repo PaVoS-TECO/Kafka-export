@@ -3,6 +3,7 @@ package edu.teco.pavos.pke;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.joda.time.ReadableInstant;;
 
 /**
  * Defines a time interval to be used for filtering the data
