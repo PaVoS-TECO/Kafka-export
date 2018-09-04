@@ -1,6 +1,10 @@
 package edu.teco.pavos.pke;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.prefs.Preferences;
 
 /**
@@ -23,8 +27,44 @@ public class DownloadState {
     public DownloadState(String id) {
     	
     	this.downloadID = id;
+    	File status = new File("/usr/pke/status/" + id + ".txt");
+    	boolean exists = status.exists();
     	
-    	Preferences prefs = Preferences.userRoot().node(this.save);
+    	if (exists) {
+    		
+			try {
+				
+				BufferedReader br = new BufferedReader(new FileReader(status.getAbsolutePath()));
+				String line;
+				
+				while ((line = br.readLine()) != null) {
+					
+					String[] p = line.split(" ");
+					if (p.length >= 2 && p[0].equals("ready")) {
+						this.ready = p[1];
+					} else if (p.length >= 2 && p[0].equals("path")) {
+						this.filePath = new File(p[1]);
+					}
+					
+				}
+				
+				br.close();
+			} catch (FileNotFoundException e) {
+				this.ready = "error";
+	    		this.filePath = new File("/usr/pke/export.properties");
+			} catch (IOException e) {
+				this.ready = "error";
+	    		this.filePath = new File("/usr/pke/export.properties");
+			}
+    		
+    	} else {
+    		
+    		this.ready = "noID";
+    		this.filePath = new File("/usr/pke/export.properties");
+    		
+    	}
+    	
+    	/*Preferences prefs = Preferences.userRoot().node(this.save);
     	boolean exists = prefs.getBoolean(this.downloadID, false);
     	
     	if (exists) {
@@ -39,7 +79,7 @@ public class DownloadState {
     		this.ready = "noID";
     		this.filePath = new File("/usr/pke/export.properties");
     		
-    	}
+    	}*/
     	
     }
     

@@ -1,6 +1,9 @@
 package edu.teco.pavos.pke;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.prefs.Preferences;
 
 /**
@@ -61,10 +64,25 @@ public class AlterableDownloadState extends DownloadState {
      */
     public void savePersistent() {
     	
-    	Preferences prefs = Preferences.userRoot().node(super.save);
+    	try {
+    		
+			PrintWriter writer = new PrintWriter("/usr/pke/status/" + super.downloadID + ".txt", "UTF-8");
+			writer.println("ready " + super.ready);
+			writer.println("path " + super.filePath.getAbsolutePath());
+			writer.close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	/*Preferences prefs = Preferences.userRoot().node(super.save);
     	prefs.putBoolean(super.downloadID, true);
     	prefs.put(super.downloadID + "/Path", super.filePath.getAbsolutePath());
-    	prefs.put(super.downloadID + "/Ready", super.ready);
+    	prefs.put(super.downloadID + "/Ready", super.ready);*/
 
     }
     
