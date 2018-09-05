@@ -2,6 +2,7 @@ package edu.teco.pavos.pke;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
@@ -97,6 +98,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 	        
 			kafka.close();
 			this.writer.close();
+			this.csvWriter.close();
 			
 		} catch (FileNotFoundException e) {
 			
@@ -108,6 +110,9 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 	}
