@@ -13,6 +13,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.opencsv.CSVWriter;
+
 /**
  * Implementation of the FileWriterStrategy interface for CSV files.
  * @author Jean Baumgarten
@@ -21,7 +23,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 
     private HashSet<String> features = new HashSet<String>();
     private HashSet<String> dataStreams = new HashSet<String>();
-    private HashSet<String> locations = new HashSet<String>();
+    //private HashSet<String> locations = new HashSet<String>();
     private HashSet<String> things = new HashSet<String>();
     private HashSet<String> sensors = new HashSet<String>();
     private HashSet<String> observedProperties = new HashSet<String>();
@@ -32,6 +34,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 	private int clusterDepth;
 	private PrintWriter writer;
 	private TimeIntervall interval;
+	private CSVWriter csvWriter;
 
 	/**
      * Default constructor
@@ -63,6 +66,13 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		try {
 			
 			this.writer = new PrintWriter(file.getAbsolutePath(), "UTF-8");
+			
+			this.csvWriter = new CSVWriter(this.writer,
+                    CSVWriter.DEFAULT_SEPARATOR,
+                    CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+			
 			KafkaDataGetter kafka = new KafkaDataGetter();
 			boolean work = true;
 			
@@ -132,21 +142,27 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 						//JSONObject location = (JSONObject) record.get("Location");
 						
 						if (!this.observedProperties.contains((String) observedProperty.get("iotId")))
-							this.writer.println(this.getObservedPropertyLine(observedProperty));
+							this.csvWriter.writeNext(this.getObservedPropertyLine(observedProperty));
+							//this.writer.println(this.getObservedPropertyLine(observedProperty));
 						
 						if (!this.sensors.contains((String) sensor.get("iotId")))
-							this.writer.println(this.getSensorLine(sensor));
+							this.csvWriter.writeNext(this.getSensorLine(sensor));
+							//this.writer.println(this.getSensorLine(sensor));
 						
 						if (!this.things.contains((String) thing.get("iotId")))
-							this.writer.println(this.getThingLine(thing));
+							this.csvWriter.writeNext(this.getThingLine(thing));
+							//this.writer.println(this.getThingLine(thing));
 						
 						if (!this.features.contains((String) featureOfInterest.get("iotId")))
-							this.writer.println(this.getFeatureLine(featureOfInterest));
+							this.csvWriter.writeNext(this.getFeatureLine(featureOfInterest));
+							//this.writer.println(this.getFeatureLine(featureOfInterest));
 						
 						if (!this.dataStreams.contains((String) dataStream.get("iotId")))
-							this.writer.println(this.getDataStreamLine(dataStream, thing, observedProperty, sensor));
+							this.csvWriter.writeNext(this.getDataStreamLine(dataStream, thing, observedProperty, sensor));
+							//this.writer.println(this.getDataStreamLine(dataStream, thing, observedProperty, sensor));
 						
-						this.writer.println(this.getObservationLine(obs, dataStream, featureOfInterest));
+						this.csvWriter.writeNext(this.getObservationLine(obs, dataStream, featureOfInterest));
+						//this.writer.println(this.getObservationLine(obs, dataStream, featureOfInterest));
 						
 					}
 					
@@ -182,6 +198,159 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		return this.clusters.contains(dID);
 		
 	}
+	
+	private String[] getObservedPropertyLine(JSONObject op) {
+		
+		this.observedProperties.add(op.get("iotId").toString());
+		
+		String[] out = {
+				"observedProperty",
+				(String) op.get("iotId"),
+				(String) op.get("name"),
+				(String) op.get("description"),
+				(String) op.get("definition")
+			};
+		
+		return out;
+		
+	}
+	
+	private String[] getSensorLine(JSONObject s) {
+		
+		this.sensors.add(s.get("iotId").toString());
+		
+		String[] out = {
+				"sensor",
+				(String) s.get("iotId"),
+				(String) s.get("name"),
+				(String) s.get("description"),
+				(String) s.get("encodingType"),
+				(String) s.get("metadata")
+			};
+		
+		return out;
+		
+	}
+	
+	private String[] getFeatureLine(JSONObject f) {
+		
+		this.features.add(f.get("iotId").toString());
+		
+		String[] out = {
+				"featureOfInterest",
+				(String) f.get("iotId"),
+				(String) f.get("name"),
+				(String) f.get("description"),
+				(String) f.get("encodingType"),
+				((JSONObject) f.get("feature")).toJSONString()
+			};
+		
+		return out;
+		
+	}
+	
+	private String[] getThingLine(JSONObject t) {
+		
+		this.things.add(t.get("iotId").toString());
+		
+		String opt = "";
+		Object optional = t.get("properties");
+		if (optional != null) {
+			opt = ((JSONObject) optional).toJSONString();
+		}
+		
+		String[] out = {
+				"featureOfInterest",
+				(String) t.get("iotId"),
+				(String) t.get("name"),
+				(String) t.get("description"),
+				opt
+			};
+		
+		return out;
+		
+	}
+	
+	private String[] getDataStreamLine(JSONObject d, JSONObject t, JSONObject op, JSONObject s) {
+		
+		this.dataStreams.add(d.get("iotId").toString());
+		
+		String optOA = "";
+		Object optional = d.get("observedArea");
+		if (optional != null) {
+			optOA = "" + optional;
+		}
+		
+		String optPT = "";
+		optional = d.get("phenomenonTime");
+		if (optional != null) {
+			optPT = "" + optional;
+		}
+		
+		String optRT = "";
+		optional = d.get("resultTime");
+		if (optional != null) {
+			optRT = "" + optional;
+		}
+		
+		String[] out = {
+				"dataStream",
+				(String) d.get("iotId"),
+				(String) d.get("name"),
+				(String) d.get("description"),
+				(String) d.get("observationType"),
+				((JSONObject) d.get("unitOfMeasurement")).toJSONString(),
+				(String) t.get("iotId"),
+				(String) op.get("iotId"),
+				(String) s.get("iotId"),
+				optOA,
+				optPT,
+				optRT
+			};
+		
+		return out;
+		
+	}
+	
+	private String[] getObservationLine(JSONObject o, JSONObject d, JSONObject f) {
+		
+		String optRQ = "";
+		Object optional = o.get("resultQuality");
+		if (optional != null) {
+			optRQ = "" + optional;
+		}
+		
+		String optVT = "";
+		optional = o.get("validTime");
+		if (optional != null) {
+			optVT = "" + optional;
+		}
+		
+		String optP = "";
+		optional = o.get("parameters");
+		if (optional != null) {
+			JSONObject op = (JSONObject) optional;
+			optP = "" + op.toJSONString();
+		}
+		
+		String[] out = {
+				"observation",
+				(String) o.get("iotId"),
+				(String) o.get("phenomenonTime"),
+				(String) o.get("result"),
+				(String) o.get("resultTime"),
+				(String) d.get("iotId"),
+				(String) f.get("iotId"),
+				optRQ,
+				optVT,
+				optP
+			};
+		
+		return out;
+		
+	}
+	
+	/*
 	
 	private String getObservedPropertyLine(JSONObject op) {
 		
@@ -326,6 +495,6 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		
 		return line;
 		
-	}
+	}*/
 	
 }
