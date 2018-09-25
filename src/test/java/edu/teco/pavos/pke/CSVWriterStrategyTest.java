@@ -2,13 +2,21 @@ package edu.teco.pavos.pke;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
+
+import com.opencsv.CSVWriter;
 
 /**
  * Test case for CSVWriterStrategy
@@ -57,6 +65,47 @@ public class CSVWriterStrategyTest {
 			assertTrue(false);
 		}
 		
+	}
+	
+	@Test
+	public void test1() {
+		
+		JSONObject op = new JSONObject();
+		op.put("iotId", "ID");
+		op.put("name", "OP");
+		op.put("description", "Desc");
+		op.put("definition", "Deff");
+		
+		String[] out = {
+				"observedProperty",
+				(String) op.get("iotId"),
+				(String) op.get("name"),
+				(String) op.get("description"),
+				(String) op.get("definition")
+			};
+		
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(System.getProperty("user.home") + File.separator + "Desktop/newTest.csv", "UTF-8");
+			CSVWriter csvWriter = new CSVWriter(writer,
+	                CSVWriter.DEFAULT_SEPARATOR,
+	                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+	                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+	                CSVWriter.DEFAULT_LINE_END);
+			csvWriter.writeNext(out);
+			csvWriter.writeNext(out);
+			csvWriter.close();
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Test

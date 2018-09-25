@@ -97,8 +97,8 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 			}
 	        
 			kafka.close();
-			this.writer.close();
 			this.csvWriter.close();
+			this.writer.close();
 			
 		} catch (FileNotFoundException e) {
 			
@@ -241,13 +241,17 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		
 		this.features.add(f.get("iotId").toString());
 		
+		JSONObject feature = (JSONObject) f.get("feature");
+		String coords = "[" + feature.get("coordinates") + "]";
+		feature.put("coordinates", coords);
+		
 		String[] out = {
 				"featureOfInterest",
 				(String) f.get("iotId"),
 				(String) f.get("name"),
 				(String) f.get("description"),
 				(String) f.get("encodingType"),
-				((JSONObject) f.get("feature")).toJSONString()
+				toJsonString(feature)
 			};
 		
 		return out;
@@ -261,11 +265,11 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		String opt = "";
 		Object optional = t.get("properties");
 		if (optional != null) {
-			opt = ((JSONObject) optional).toJSONString();
+			opt = toJsonString((JSONObject) optional);
 		}
 		
 		String[] out = {
-				"featureOfInterest",
+				"thing",
 				(String) t.get("iotId"),
 				(String) t.get("name"),
 				(String) t.get("description"),
@@ -283,7 +287,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		String optOA = "";
 		Object optional = d.get("observedArea");
 		if (optional != null) {
-			optOA = "" + optional;
+			optOA = toJsonString((JSONObject) optional);
 		}
 		
 		String optPT = "";
@@ -304,7 +308,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 				(String) d.get("name"),
 				(String) d.get("description"),
 				(String) d.get("observationType"),
-				((JSONObject) d.get("unitOfMeasurement")).toJSONString(),
+				toJsonString((JSONObject) d.get("unitOfMeasurement")),
 				(String) t.get("iotId"),
 				(String) op.get("iotId"),
 				(String) s.get("iotId"),
@@ -335,7 +339,7 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		optional = o.get("parameters");
 		if (optional != null) {
 			JSONObject op = (JSONObject) optional;
-			optP = "" + op.toJSONString();
+			optP = "" + toJsonString(op);
 		}
 		
 		String[] out = {
@@ -353,6 +357,26 @@ public class CSVWriterStrategy implements FileWriterStrategy {
 		
 		return out;
 		
+	}
+	
+	private static String toJsonString(JSONObject object) {
+		
+		String json = "{";
+		
+		for (Object oKey : object.keySet()) {
+			String key = "" + oKey;
+			String value = "" + object.get(key);
+			json += "\"" + key + "\":";
+			if (value.startsWith("[")) {
+				json += value + ",";
+			} else {
+				json += "\"" + value + "\",";
+			}
+		}
+        		
+        json += "}";
+        
+		return json;
 	}
 	
 	/*
